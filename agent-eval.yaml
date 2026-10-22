@@ -1,0 +1,43 @@
+project:
+  name: customer-support-agent
+  version: 0.1.0
+
+dataset:
+  path: evals/dataset.yaml
+
+agent:
+  type: mock
+  name: mock-customer-support
+  version: 1.0.0
+
+judge:
+  enabled: true
+  provider: mock
+  model: mock-judge
+
+scoring:
+  weights:
+    deterministic: 0.5
+    judge: 0.3
+    trajectory: 0.0
+    performance: 0.2
+  min_overall_score: 0.6
+
+regression:
+  enabled: true
+  max_score_drop: 0.05
+  max_latency_increase_percent: 20
+  fail_on: [error]
+
+storage:
+  type: sqlite
+  path: .agent_eval/results.db
+
+report:
+  output_dir: reports
+  formats: [json, markdown]
+
+run:
+  mode: mock
+  timeout_s: 60
+  max_concurrency: 1

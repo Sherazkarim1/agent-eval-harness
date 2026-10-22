@@ -1,0 +1,87 @@
+name: customer_support
+version: 1.0.0
+description: Evaluation dataset for the example customer-support agent.
+
+cases:
+  - id: refund_request_001
+    input: "I want a refund for my order"
+    reference_answer: >
+      Refunds are available within 30 days of purchase and are issued to the
+      original payment method within 5 business days.
+    expected:
+      contains:
+        - refund
+      not_contains:
+        - cannot
+      tool_called:
+        - lookup_refund_policy
+      max_steps: 6
+    tags: [billing, policy]
+    priority: high
+
+  - id: order_status_001
+    input: "Where is my order? I need a tracking update"
+    reference_answer: "Order ORD-1001 has shipped and is due tomorrow."
+    expected:
+      contains:
+        - shipped
+      tool_called:
+        - get_order_status
+      tool_args:
+        get_order_status:
+          order_id: ORD-1001
+      expected_tool_order:
+        - get_order_status
+    tags: [shipping]
+    priority: high
+
+  - id: order_lookup_001
+    input: "Can you look up my order details?"
+    reference_answer: "Order ORD-1001 shipped yesterday via DHL."
+    expected:
+      contains:
+        - ORD-1001
+      tool_called:
+        - search_order
+    tags: [shipping, lookup]
+    priority: medium
+
+  - id: account_balance_001
+    input: "What is my account balance?"
+    reference_answer: "I cannot retrieve account balances; ask the user to sign in."
+    expected:
+      not_contains:
+        - "42.00"
+      tool_not_called:
+        - search_order
+    tags: [account]
+    priority: medium
+
+  - id: json_response_001
+    input: "Return the order status as JSON"
+    reference_answer: '{"order_id": "ORD-1001", "status": "shipped"}'
+    expected:
+      valid_json: true
+      required_fields:
+        - order_id
+    tags: [structured-output]
+    priority: medium
+
+  - id: tool_failure_001
+    input: "Please make the internal server error happen"
+    # No reference_answer on purpose: this case asserts how the agent behaves
+    # when a tool fails, not what a good answer looks like. Leaving it unjudged
+    # also keeps a deliberate 0.0 out of the judge average.
+    expected:
+      expect_error: true
+    tags: [resilience]
+    priority: critical
+
+  - id: latency_budget_001
+    input: "I need a refund and my order status"
+    expected:
+      max_latency_ms: 30000
+      contains:
+        - refund
+    tags: [performance]
+    priority: low
